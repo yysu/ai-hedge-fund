@@ -46,6 +46,7 @@ By using this software, you agree to use it solely for learning purposes.
       - [Available LLM Models:](#available-llm-models)
     - [Running the Hedge Fund](#running-the-hedge-fund)
     - [Running the Backtester](#running-the-backtester)
+  - [Portfolio](#portfolio)
   - [Project Structure](#project-structure)
   - [Contributing](#contributing)
   - [Feature Requests](#feature-requests)
@@ -129,10 +130,9 @@ The following command line arguments are available for both the main program and
 
 #### Available LLM Models:
 Depending on your API keys, you can use models from:
-- OpenAI: `gpt-4o`, `gpt-4o-mini`, etc.
-- Anthropic: `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, etc.
-- Groq: `llama3-70b-8192`, `mixtral-8x7b-32768`, etc.
-- DeepSeek: `deepseek-coder`, etc.
+- OpenAI: `gpt-4o`, `gpt-4.5-preview`, `o1`, `o3-mini`, etc.
+- Anthropic: `claude-3-7-sonnet-latest`, `claude-3-5-sonnet-latest`, `claude-3-5-haiku-latest`, etc.
+- DeepSeek: `deepseek-reasoner`, `deepseek-chat`, etc.
 
 ### Running the Hedge Fund
 ```bash
@@ -188,6 +188,66 @@ poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA --initial-capital 50
 # Combine multiple options
 poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA --analysts warren_buffett,charlie_munger --model gpt-4o --start-date 2024-01-01 --end-date 2024-03-01 --initial-capital 100000
 ```
+
+
+## Portfolio
+
+⸻
+
+📌 價值投資派（保守型、穩健增值）
+	•	Benjamin Graham (ben_graham)：價值投資、低估資產、強調安全邊際。
+	•	Charlie Munger (charlie_munger)：著重企業品質與競爭優勢。
+	•	Warren Buffett (warren_buffett)：品質企業合理價，長期持有。
+	•	Valuation Analyst (valuation_analyst)：量化估值、協助評估公司價值。
+
+理由：
+	•	Graham、Buffett、Munger 策略高度互補，都重視基本面、長期價值與安全邊際。
+	•	Valuation Analyst 提供數據支持，幫助精確衡量企業價值。
+
+⸻
+
+📈 積極增長型（高成長潛力、承擔較高風險）
+	•	Cathie Wood (cathie_wood)：投資創新科技、成長股。
+	•	Sentiment Analyst (sentiment_analyst)：透過市場情緒掌握趨勢。
+	•	Fundamentals Analyst (fundamentals_analyst)：基本面篩選高成長潛力股。
+
+理由：
+	•	Cathie Wood 的創新成長策略風險較高，但有高回報潛力。
+	•	Sentiment Analyst 協助掌握市場情緒、增強時機掌控。
+	•	Fundamental Analyst 則確保基本面穩健，避免投資於純粹炒作標的。
+
+⸻
+
+📊 激進主動型（積極管理、願承受波動、強調主動參與）
+	•	Bill Ackman (bill_ackman)：積極介入公司經營改善價值（主動派）。
+	•	Stanley Druckenmiller (stanley_druckenmiller)：宏觀交易、短期與中期趨勢布局。
+	•	Sentiment Analyst (sentiment_analyst)：市場情緒協助進出點掌握。
+
+理由：
+	•	Ackman 的主動介入與 Druckenmiller 的宏觀趨勢交易可互補，一者是微觀公司內部價值挖掘，另一者掌握大環境趨勢。
+	•	Sentiment Analyst 提供即時市場情緒訊號，輔助投資時機判斷。
+
+⸻
+
+📉 短線交易與技術導向型（短期操作、技術指標為主）
+	•	Technical Analyst (technical_analyst)：專注價格與成交量訊號，適合短線或波段交易。
+	•	Sentiment Analyst (sentiment_analyst)：輔助技術訊號，以情緒佐證市場走勢。
+
+理由：
+	•	技術分析與市場情緒高度互補，技術面掌握進出點，情緒分析增加勝率。
+	•	適合風格傾向短期獲利、重視市場動能的投資人。
+
+⸻
+
+👥 不同投資人心態適合的策略組合：
+
+心態與需求	策略組合推薦	原因解釋
+🛡️ 保守穩健型	Graham + Munger + Buffett + Valuation Analyst	長期價值為主，注重安全邊際與穩定收益。
+🚀 積極成長型	Cathie Wood + Fundamentals + Sentiment Analyst	注重高成長、創新、善用市場情緒來掌握風險與時機。
+⚔️ 激進主動型	Ackman + Druckenmiller + Sentiment Analyst	主動介入、短中期趨勢布局，積極獲取超額報酬。
+📈 技術短線型	Technical Analyst + Sentiment Analyst	以價格趨勢、情緒波動迅速掌握短期獲利時機。
+⚖️ 均衡混合型	Buffett + Valuation Analyst + Technical Analyst	長期價值持股，搭配技術分析掌握進出場時機，穩健中尋求增長。
+
 
 ## Project Structure
 ```
