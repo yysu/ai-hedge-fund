@@ -114,7 +114,21 @@ def get_model_info(model_name: str) -> LLMModel | None:
     return next((model for model in AVAILABLE_MODELS if model.model_name == model_name), None)
 
 
-def get_model(model_name: str, model_provider: ModelProvider) -> ChatOpenAI | ChatGroq | None:
+def get_model(model_name: str, model_provider: str | ModelProvider) -> ChatOpenAI | ChatGroq | None:
+    # Convert string to ModelProvider enum if needed
+    if isinstance(model_provider, str):
+        try:
+            model_provider = ModelProvider(model_provider)
+        except ValueError:
+            # If conversion fails, try to get provider from model info
+            model_info = get_model_info(model_name)
+            if model_info:
+                model_provider = model_info.provider
+                print(f"Using provider {model_provider.value} from model info for {model_name}")
+            else:
+                # Default to OpenAI if all else fails
+                model_provider = ModelProvider.OPENAI
+                print(f"Warning: Could not determine provider for model {model_name}, defaulting to OpenAI")
     if model_provider == ModelProvider.GROQ:
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:

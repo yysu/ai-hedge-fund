@@ -22,7 +22,7 @@ def call_llm(
     Args:
         prompt: The prompt to send to the LLM
         model_name: Name of the model to use
-        model_provider: Provider of the model
+        model_provider: Provider of the model (string)
         pydantic_model: The Pydantic model class to structure the output
         agent_name: Optional name of the agent for progress updates
         max_retries: Maximum number of retries (default: 3)
@@ -32,8 +32,15 @@ def call_llm(
         An instance of the specified Pydantic model
     """
     from llm.models import get_model, get_model_info
-    
+
+    # Let the original functions handle all provider logic
     model_info = get_model_info(model_name)
+    
+    # Just log what's happening for debugging
+    if agent_name:
+        progress.update_status(agent_name, None, f"Using model: {model_name} from provider: {model_provider}")
+    
+    # Call the original function without our enum conversion
     llm = get_model(model_name, model_provider)
     
     # For non-JSON support models, we can use structured output
