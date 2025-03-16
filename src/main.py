@@ -60,7 +60,6 @@ def run_hedge_fund(
     selected_analysts: list[str] = [],
     model_name: str = "gpt-4o",
     model_provider: str = "OpenAI",
-    allow_short: bool = False,
 ):
     # Start progress tracking
     progress.start()
@@ -91,7 +90,6 @@ def run_hedge_fund(
                     "show_reasoning": show_reasoning,
                     "model_name": model_name,
                     "model_provider": model_provider,
-                    "allow_short": allow_short,
                 },
             },
         )
@@ -156,7 +154,7 @@ if __name__ == "__main__":
         "--margin-requirement",
         type=float,
         default=0.0,
-        help="Initial margin requirement. Only used when short selling is enabled"
+        help="Initial margin requirement. Defaults to 0.0"
     )
     parser.add_argument("--ticker", type=str, required=True,
                         help="Comma-separated list of stock ticker symbols")
@@ -171,9 +169,6 @@ if __name__ == "__main__":
                         help="Show reasoning from each agent")
     parser.add_argument(
         "--show-agent-graph", action="store_true", help="Show the agent graph"
-    )
-    parser.add_argument(
-        "--allow-short", action="store_true", help="Enable short selling"
     )
     parser.add_argument(
         "--analysts", type=str,
@@ -317,7 +312,7 @@ if __name__ == "__main__":
     # Initialize portfolio with cash amount and stock positions
     portfolio = {
         "cash": args.initial_cash,  # Initial cash amount
-        "margin_requirement": args.margin_requirement if args.allow_short else 0.0,  # 只在允許做空時設置保證金
+        "margin_requirement": args.margin_requirement,  # Initial margin requirement
         "positions": {
             ticker: {
                 "long": 0,  # Number of shares held long
@@ -344,7 +339,6 @@ if __name__ == "__main__":
         selected_analysts=selected_analysts,
         model_name=model_choice,
         model_provider=model_provider,
-        allow_short=args.allow_short,  # 直接使用 allow_short 參數
     )
     print_trading_output(result)
     print(f"Selected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}")

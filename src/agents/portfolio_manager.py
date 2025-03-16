@@ -30,7 +30,6 @@ def portfolio_management_agent(state: AgentState):
     portfolio = state["data"]["portfolio"]
     analyst_signals = state["data"]["analyst_signals"]
     tickers = state["data"]["tickers"]
-    allow_short = state["metadata"].get("allow_short", True)  # 新增參數，預設為 True
 
     progress.update_status("portfolio_management_agent",
                            None, "Analyzing signals")
@@ -68,27 +67,16 @@ def portfolio_management_agent(state: AgentState):
     progress.update_status("portfolio_management_agent",
                            None, "Making trading decisions")
 
-    # 根據 allow_short 參數選擇使用哪個決策函數
-    if allow_short:
-        result = generate_trading_decision(
-            tickers=tickers,
-            signals_by_ticker=signals_by_ticker,
-            current_prices=current_prices,
-            max_shares=max_shares,
-            portfolio=portfolio,
-            model_name=state["metadata"]["model_name"],
-            model_provider=state["metadata"]["model_provider"],
-        )
-    else:
-        result = generate_trading_decision_no_short(
-            tickers=tickers,
-            signals_by_ticker=signals_by_ticker,
-            current_prices=current_prices,
-            max_shares=max_shares,
-            portfolio=portfolio,
-            model_name=state["metadata"]["model_name"],
-            model_provider=state["metadata"]["model_provider"],
-        )
+    # Generate the trading decision
+    result = generate_trading_decision(
+        tickers=tickers,
+        signals_by_ticker=signals_by_ticker,
+        current_prices=current_prices,
+        max_shares=max_shares,
+        portfolio=portfolio,
+        model_name=state["metadata"]["model_name"],
+        model_provider=state["metadata"]["model_provider"],
+    )
 
     # Create the portfolio management message
     message = HumanMessage(
@@ -206,97 +194,6 @@ def generate_trading_decision(
             "portfolio_cash": f"{portfolio.get('cash', 0):.2f}",
             "portfolio_positions": json.dumps(portfolio.get('positions', {}), indent=2),
             "margin_requirement": f"{portfolio.get('margin_requirement', 0):.2f}",
-        }
-    )
-
-    # Create default factory for PortfolioManagerOutput
-    def create_default_portfolio_output():
-        return PortfolioManagerOutput(decisions={ticker: PortfolioDecision(action="hold", quantity=0, confidence=0.0, reasoning="Error in portfolio management, defaulting to hold") for ticker in tickers})
-
-    return call_llm(prompt=prompt, model_name=model_name, model_provider=model_provider, pydantic_model=PortfolioManagerOutput, agent_name="portfolio_management_agent", default_factory=create_default_portfolio_output)
-
-
-def generate_trading_decision_no_short(
-    tickers: list[str],
-    signals_by_ticker: dict[str, dict],
-    current_prices: dict[str, float],
-    max_shares: dict[str, int],
-    portfolio: dict[str, float],
-    model_name: str,
-    model_provider: str,
-) -> PortfolioManagerOutput:
-    """Attempts to get a decision from the LLM with retry logic - no short selling version"""
-    # Create the prompt template
-    template = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                """You are a portfolio manager making final trading decisions based on multiple tickers.
-
-              Trading Rules:
-              - Only buy if you have available cash
-              - Only sell if you currently hold shares of that ticker
-              - Sell quantity must be ≤ current position shares
-              - Buy quantity must be ≤ max_shares for that ticker
-              - The max_shares values are pre-calculated to respect position limits
-
-              Available Actions:
-              - "buy": Open or add to position
-              - "sell": Close or reduce position
-              - "hold": No action
-
-              Inputs:
-              - signals_by_ticker: dictionary of ticker → signals
-              - max_shares: maximum shares allowed per ticker
-              - portfolio_cash: current cash in portfolio
-              - portfolio_positions: current positions
-              - current_prices: current prices for each ticker
-              """,
-            ),
-            (
-                "human",
-                """Based on the team's analysis, make your trading decisions for each ticker.
-
-              Here are the signals by ticker:
-              {signals_by_ticker}
-
-              Current Prices:
-              {current_prices}
-
-              Maximum Shares Allowed For Purchases:
-              {max_shares}
-
-              Portfolio Cash: {portfolio_cash}
-              Current Positions: {portfolio_positions}
-
-              Output strictly in JSON with the following structure:
-              {{
-                "decisions": {{
-                  "TICKER1": {{
-                    "action": "buy/sell/hold",
-                    "quantity": integer,
-                    "confidence": float,
-                    "reasoning": "string"
-                  }},
-                  "TICKER2": {{
-                    ...
-                  }},
-                  ...
-                }}
-              }}
-              """,
-            ),
-        ]
-    )
-
-    # Generate the prompt
-    prompt = template.invoke(
-        {
-            "signals_by_ticker": json.dumps(signals_by_ticker, indent=2),
-            "current_prices": json.dumps(current_prices, indent=2),
-            "max_shares": json.dumps(max_shares, indent=2),
-            "portfolio_cash": f"{portfolio.get('cash', 0):.2f}",
-            "portfolio_positions": json.dumps(portfolio.get('positions', {}), indent=2),
         }
     )
 

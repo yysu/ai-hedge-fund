@@ -38,7 +38,6 @@ class Backtester:
         model_provider: str = "OpenAI",
         selected_analysts: list[str] = [],
         initial_margin_requirement: float = 0.0,
-        allow_short: bool = False,
     ):
         """
         :param agent: The trading agent (Callable).
@@ -50,7 +49,6 @@ class Backtester:
         :param model_provider: Which LLM provider (OpenAI, etc).
         :param selected_analysts: List of analyst names or IDs to incorporate.
         :param initial_margin_requirement: The margin ratio (e.g. 0.5 = 50%).
-        :param allow_short: Whether to allow short selling.
         """
         self.agent = agent
         self.tickers = tickers
@@ -692,15 +690,10 @@ if __name__ == "__main__":
         help="Initial cash amount (default: 10000)",
     )
     parser.add_argument(
-        "--allow-short",
-        action="store_true",
-        help="Enable short selling"
-    )
-    parser.add_argument(
         "--margin-requirement",
         type=float,
         default=0.0,
-        help="Margin ratio for short positions, e.g. 0.5 for 50%. Only used when short selling is enabled"
+        help="Margin ratio for short positions, e.g. 0.5 for 50% (default: 0.0)",
     )
     parser.add_argument(
         "--analysts",
@@ -819,8 +812,7 @@ if __name__ == "__main__":
         model_name=model_choice,
         model_provider=model_provider,
         selected_analysts=selected_analysts,
-        initial_margin_requirement=args.margin_requirement if args.allow_short else 0.0,
-        allow_short=args.allow_short,
+        initial_margin_requirement=args.margin_requirement,
     )
 
     performance_metrics = backtester.run_backtest()
