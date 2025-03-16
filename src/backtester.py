@@ -71,9 +71,11 @@ class Backtester:
                 ticker: {
                     "long": 0,               # Number of shares held long
                     "short": 0,              # Number of shares held short
-                    "long_cost_basis": 0.0,  # Average cost basis per share (long)
-                    "short_cost_basis": 0.0, # Average cost basis per share (short)
-                    "short_margin_used": 0.0 # Dollars of margin used for this ticker's short
+                    # Average cost basis per share (long)
+                    "long_cost_basis": 0.0,
+                    # Average cost basis per share (short)
+                    "short_cost_basis": 0.0,
+                    "short_margin_used": 0.0  # Dollars of margin used for this ticker's short
                 } for ticker in tickers
             },
             "realized_gains": {
@@ -108,7 +110,8 @@ class Backtester:
                 if total_shares > 0:
                     total_old_cost = old_cost_basis * old_shares
                     total_new_cost = cost
-                    position["long_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
+                    position["long_cost_basis"] = (
+                        total_old_cost + total_new_cost) / total_shares
 
                 position["long"] += quantity
                 self.portfolio["cash"] -= cost
@@ -125,7 +128,8 @@ class Backtester:
                     if total_shares > 0:
                         total_old_cost = old_cost_basis * old_shares
                         total_new_cost = cost
-                        position["long_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
+                        position["long_cost_basis"] = (
+                            total_old_cost + total_new_cost) / total_shares
 
                     position["long"] += max_quantity
                     self.portfolio["cash"] -= cost
@@ -168,7 +172,8 @@ class Backtester:
                 if total_shares > 0:
                     total_old_cost = old_cost_basis * old_short_shares
                     total_new_cost = current_price * new_shares
-                    position["short_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
+                    position["short_cost_basis"] = (
+                        total_old_cost + total_new_cost) / total_shares
 
                 position["short"] += quantity
 
@@ -183,7 +188,8 @@ class Backtester:
             else:
                 # Calculate maximum shortable quantity
                 if self.margin_ratio > 0:
-                    max_quantity = int(self.portfolio["cash"] / (current_price * self.margin_ratio))
+                    max_quantity = int(
+                        self.portfolio["cash"] / (current_price * self.margin_ratio))
                 else:
                     max_quantity = 0
 
@@ -198,7 +204,8 @@ class Backtester:
                     if total_shares > 0:
                         total_old_cost = old_cost_basis * old_short_shares
                         total_new_cost = current_price * max_quantity
-                        position["short_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
+                        position["short_cost_basis"] = (
+                            total_old_cost + total_new_cost) / total_shares
 
                     position["short"] += max_quantity
                     position["short_margin_used"] += margin_required
@@ -266,7 +273,8 @@ class Backtester:
 
             # Short position unrealized PnL = short_shares * (short_cost_basis - current_price)
             if position["short"] > 0:
-                total_value += position["short"] * (position["short_cost_basis"] - price)
+                total_value += position["short"] * \
+                    (position["short_cost_basis"] - price)
 
         return total_value
 
@@ -287,10 +295,12 @@ class Backtester:
             get_financial_metrics(ticker, self.end_date, limit=10)
 
             # Fetch insider trades
-            get_insider_trades(ticker, self.end_date, start_date=self.start_date, limit=1000)
+            get_insider_trades(ticker, self.end_date,
+                               start_date=self.start_date, limit=1000)
 
             # Fetch company news
-            get_company_news(ticker, self.end_date, start_date=self.start_date, limit=1000)
+            get_company_news(ticker, self.end_date,
+                             start_date=self.start_date, limit=1000)
 
         print("Data pre-fetch complete.")
 
@@ -324,14 +334,17 @@ class Backtester:
 
         # Initialize portfolio values list with initial capital
         if len(dates) > 0:
-            self.portfolio_values = [{"Date": dates[0], "Portfolio Value": self.initial_capital}]
+            self.portfolio_values = [
+                {"Date": dates[0], "Portfolio Value": self.initial_capital}]
         else:
             self.portfolio_values = []
 
         for current_date in dates:
-            lookback_start = (current_date - timedelta(days=30)).strftime("%Y-%m-%d")
+            lookback_start = (current_date - timedelta(days=30)
+                              ).strftime("%Y-%m-%d")
             current_date_str = current_date.strftime("%Y-%m-%d")
-            previous_date_str = (current_date - timedelta(days=1)).strftime("%Y-%m-%d")
+            previous_date_str = (
+                current_date - timedelta(days=1)).strftime("%Y-%m-%d")
 
             # Skip if there's no prior day to look back (i.e., first date in the range)
             if lookback_start == current_date_str:
@@ -340,12 +353,14 @@ class Backtester:
             # Get current prices for all tickers
             try:
                 current_prices = {
-                    ticker: get_price_data(ticker, previous_date_str, current_date_str).iloc[-1]["close"]
+                    ticker: get_price_data(
+                        ticker, previous_date_str, current_date_str).iloc[-1]["close"]
                     for ticker in self.tickers
                 }
             except Exception:
                 # If data is missing or there's an API error, skip this day
-                print(f"Error fetching prices between {previous_date_str} and {current_date_str}")
+                print(
+                    f"Error fetching prices between {previous_date_str} and {current_date_str}")
                 continue
 
             # ---------------------------------------------------------------
@@ -366,10 +381,13 @@ class Backtester:
             # Execute trades for each ticker
             executed_trades = {}
             for ticker in self.tickers:
-                decision = decisions.get(ticker, {"action": "hold", "quantity": 0})
-                action, quantity = decision.get("action", "hold"), decision.get("quantity", 0)
+                decision = decisions.get(
+                    ticker, {"action": "hold", "quantity": 0})
+                action, quantity = decision.get(
+                    "action", "hold"), decision.get("quantity", 0)
 
-                executed_quantity = self.execute_trade(ticker, action, quantity, current_prices[ticker])
+                executed_quantity = self.execute_trade(
+                    ticker, action, quantity, current_prices[ticker])
                 executed_trades[ticker] = executed_quantity
 
             # ---------------------------------------------------------------
@@ -392,7 +410,8 @@ class Backtester:
             gross_exposure = long_exposure + short_exposure
             net_exposure = long_exposure - short_exposure
             long_short_ratio = (
-                long_exposure / short_exposure if short_exposure > 1e-9 else float('inf')
+                long_exposure /
+                short_exposure if short_exposure > 1e-9 else float('inf')
             )
 
             # Track each day's portfolio value in self.portfolio_values
@@ -418,9 +437,12 @@ class Backtester:
                     if ticker in signals:
                         ticker_signals[agent_name] = signals[ticker]
 
-                bullish_count = len([s for s in ticker_signals.values() if s.get("signal", "").lower() == "bullish"])
-                bearish_count = len([s for s in ticker_signals.values() if s.get("signal", "").lower() == "bearish"])
-                neutral_count = len([s for s in ticker_signals.values() if s.get("signal", "").lower() == "neutral"])
+                bullish_count = len([s for s in ticker_signals.values() if s.get(
+                    "signal", "").lower() == "bullish"])
+                bearish_count = len([s for s in ticker_signals.values() if s.get(
+                    "signal", "").lower() == "bearish"])
+                neutral_count = len([s for s in ticker_signals.values() if s.get(
+                    "signal", "").lower() == "neutral"])
 
                 # Calculate net position value
                 pos = self.portfolio["positions"][ticker]
@@ -431,7 +453,7 @@ class Backtester:
                 # Get the action and quantity from the decisions
                 action = decisions.get(ticker, {}).get("action", "hold")
                 quantity = executed_trades.get(ticker, 0)
-                
+
                 # Append the agent action to the table rows
                 date_rows.append(
                     format_backtest_row(
@@ -457,7 +479,8 @@ class Backtester:
             )
 
             # Calculate cumulative return vs. initial capital
-            portfolio_return = ((total_value + total_realized_gains) / self.initial_capital - 1) * 100
+            portfolio_return = (
+                (total_value + total_realized_gains) / self.initial_capital - 1) * 100
 
             # Add summary row for this day
             date_rows.append(
@@ -509,7 +532,8 @@ class Backtester:
 
         # Sharpe ratio
         if std_excess_return > 1e-12:
-            performance_metrics["sharpe_ratio"] = np.sqrt(252) * (mean_excess_return / std_excess_return)
+            performance_metrics["sharpe_ratio"] = np.sqrt(
+                252) * (mean_excess_return / std_excess_return)
         else:
             performance_metrics["sharpe_ratio"] = 0.0
 
@@ -518,11 +542,14 @@ class Backtester:
         if len(negative_returns) > 0:
             downside_std = negative_returns.std()
             if downside_std > 1e-12:
-                performance_metrics["sortino_ratio"] = np.sqrt(252) * (mean_excess_return / downside_std)
+                performance_metrics["sortino_ratio"] = np.sqrt(
+                    252) * (mean_excess_return / downside_std)
             else:
-                performance_metrics["sortino_ratio"] = float('inf') if mean_excess_return > 0 else 0
+                performance_metrics["sortino_ratio"] = float(
+                    'inf') if mean_excess_return > 0 else 0
         else:
-            performance_metrics["sortino_ratio"] = float('inf') if mean_excess_return > 0 else 0
+            performance_metrics["sortino_ratio"] = float(
+                'inf') if mean_excess_return > 0 else 0
 
         # Maximum drawdown
         rolling_max = values_df["Portfolio Value"].cummax()
@@ -544,15 +571,20 @@ class Backtester:
         total_realized_gains = sum(
             self.portfolio["realized_gains"][ticker]["long"] for ticker in self.tickers
         )
-        total_return = ((final_portfolio_value - self.initial_capital) / self.initial_capital) * 100
+        total_return = (
+            (final_portfolio_value - self.initial_capital) / self.initial_capital) * 100
 
-        print(f"\n{Fore.WHITE}{Style.BRIGHT}PORTFOLIO PERFORMANCE SUMMARY:{Style.RESET_ALL}")
-        print(f"Total Return: {Fore.GREEN if total_return >= 0 else Fore.RED}{total_return:.2f}%{Style.RESET_ALL}")
-        print(f"Total Realized Gains/Losses: {Fore.GREEN if total_realized_gains >= 0 else Fore.RED}${total_realized_gains:,.2f}{Style.RESET_ALL}")
+        print(
+            f"\n{Fore.WHITE}{Style.BRIGHT}PORTFOLIO PERFORMANCE SUMMARY:{Style.RESET_ALL}")
+        print(
+            f"Total Return: {Fore.GREEN if total_return >= 0 else Fore.RED}{total_return:.2f}%{Style.RESET_ALL}")
+        print(
+            f"Total Realized Gains/Losses: {Fore.GREEN if total_realized_gains >= 0 else Fore.RED}${total_realized_gains:,.2f}{Style.RESET_ALL}")
 
         # Plot the portfolio value over time
         plt.figure(figsize=(12, 6))
-        plt.plot(performance_df.index, performance_df["Portfolio Value"], color="blue")
+        plt.plot(performance_df.index,
+                 performance_df["Portfolio Value"], color="blue")
         plt.title("Portfolio Value Over Time")
         plt.ylabel("Portfolio Value ($)")
         plt.xlabel("Date")
@@ -560,25 +592,30 @@ class Backtester:
         plt.show()
 
         # Compute daily returns
-        performance_df["Daily Return"] = performance_df["Portfolio Value"].pct_change().fillna(0)
+        performance_df["Daily Return"] = performance_df["Portfolio Value"].pct_change(
+        ).fillna(0)
         daily_rf = 0.0434 / 252  # daily risk-free rate
         mean_daily_return = performance_df["Daily Return"].mean()
         std_daily_return = performance_df["Daily Return"].std()
 
         # Annualized Sharpe Ratio
         if std_daily_return != 0:
-            annualized_sharpe = np.sqrt(252) * ((mean_daily_return - daily_rf) / std_daily_return)
+            annualized_sharpe = np.sqrt(
+                252) * ((mean_daily_return - daily_rf) / std_daily_return)
         else:
             annualized_sharpe = 0
-        print(f"\nSharpe Ratio: {Fore.YELLOW}{annualized_sharpe:.2f}{Style.RESET_ALL}")
+        print(
+            f"\nSharpe Ratio: {Fore.YELLOW}{annualized_sharpe:.2f}{Style.RESET_ALL}")
 
         # Max Drawdown
         rolling_max = performance_df["Portfolio Value"].cummax()
-        drawdown = (performance_df["Portfolio Value"] - rolling_max) / rolling_max
+        drawdown = (performance_df["Portfolio Value"] -
+                    rolling_max) / rolling_max
         max_drawdown = drawdown.min()
         max_drawdown_date = drawdown.idxmin()
         if pd.notnull(max_drawdown_date):
-            print(f"Maximum Drawdown: {Fore.RED}{max_drawdown * 100:.2f}%{Style.RESET_ALL} (on {max_drawdown_date.strftime('%Y-%m-%d')})")
+            print(
+                f"Maximum Drawdown: {Fore.RED}{max_drawdown * 100:.2f}%{Style.RESET_ALL} (on {max_drawdown_date.strftime('%Y-%m-%d')})")
         else:
             print(f"Maximum Drawdown: {Fore.RED}0.00%{Style.RESET_ALL}")
 
@@ -589,27 +626,35 @@ class Backtester:
         print(f"Win Rate: {Fore.GREEN}{win_rate:.2f}%{Style.RESET_ALL}")
 
         # Average Win/Loss Ratio
-        positive_returns = performance_df[performance_df["Daily Return"] > 0]["Daily Return"]
-        negative_returns = performance_df[performance_df["Daily Return"] < 0]["Daily Return"]
+        positive_returns = performance_df[performance_df["Daily Return"]
+                                          > 0]["Daily Return"]
+        negative_returns = performance_df[performance_df["Daily Return"]
+                                          < 0]["Daily Return"]
         avg_win = positive_returns.mean() if not positive_returns.empty else 0
-        avg_loss = abs(negative_returns.mean()) if not negative_returns.empty else 0
+        avg_loss = abs(negative_returns.mean()
+                       ) if not negative_returns.empty else 0
         if avg_loss != 0:
             win_loss_ratio = avg_win / avg_loss
         else:
             win_loss_ratio = float('inf') if avg_win > 0 else 0
-        print(f"Win/Loss Ratio: {Fore.GREEN}{win_loss_ratio:.2f}{Style.RESET_ALL}")
+        print(
+            f"Win/Loss Ratio: {Fore.GREEN}{win_loss_ratio:.2f}{Style.RESET_ALL}")
 
         # Maximum Consecutive Wins / Losses
         returns_binary = (performance_df["Daily Return"] > 0).astype(int)
         if len(returns_binary) > 0:
-            max_consecutive_wins = max((len(list(g)) for k, g in itertools.groupby(returns_binary) if k == 1), default=0)
-            max_consecutive_losses = max((len(list(g)) for k, g in itertools.groupby(returns_binary) if k == 0), default=0)
+            max_consecutive_wins = max((len(list(g)) for k, g in itertools.groupby(
+                returns_binary) if k == 1), default=0)
+            max_consecutive_losses = max(
+                (len(list(g)) for k, g in itertools.groupby(returns_binary) if k == 0), default=0)
         else:
             max_consecutive_wins = 0
             max_consecutive_losses = 0
 
-        print(f"Max Consecutive Wins: {Fore.GREEN}{max_consecutive_wins}{Style.RESET_ALL}")
-        print(f"Max Consecutive Losses: {Fore.RED}{max_consecutive_losses}{Style.RESET_ALL}")
+        print(
+            f"Max Consecutive Wins: {Fore.GREEN}{max_consecutive_wins}{Style.RESET_ALL}")
+        print(
+            f"Max Consecutive Losses: {Fore.RED}{max_consecutive_losses}{Style.RESET_ALL}")
 
         return performance_df
 
@@ -620,7 +665,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run backtesting simulation")
     parser.add_argument(
-        "--tickers",
+        "--ticker",
         type=str,
         required=False,
         help="Comma-separated list of stock ticker symbols (e.g., AAPL,MSFT,GOOGL)",
@@ -634,14 +679,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--start-date",
         type=str,
-        default=(datetime.now() - relativedelta(months=1)).strftime("%Y-%m-%d"),
+        default=(datetime.now() - relativedelta(months=1)
+                 ).strftime("%Y-%m-%d"),
         help="Start date in YYYY-MM-DD format",
     )
     parser.add_argument(
-        "--initial-capital",
+        "--initial-cash",
         type=float,
-        default=100000,
-        help="Initial capital amount (default: 100000)",
+        default=10000,
+        help="Initial cash amount (default: 10000)",
     )
     parser.add_argument(
         "--margin-requirement",
@@ -649,62 +695,112 @@ if __name__ == "__main__":
         default=0.0,
         help="Margin ratio for short positions, e.g. 0.5 for 50% (default: 0.0)",
     )
+    parser.add_argument(
+        "--analysts",
+        type=str,
+        help="Comma-separated list of analysts to use. Available options: ben_graham, bill_ackman, cathie_wood, charlie_munger, stanley_druckenmiller, warren_buffett, technical_analyst, fundamentals_analyst, sentiment_analyst, valuation_analyst"
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        help="LLM model to use (e.g., gpt-4o, claude-3-sonnet-20240229)"
+    )
 
     args = parser.parse_args()
 
     # Parse tickers from comma-separated string
-    tickers = [ticker.strip() for ticker in args.tickers.split(",")] if args.tickers else []
+    tickers = [ticker.strip()
+               for ticker in args.ticker.split(",")] if args.ticker else []
 
-    # Choose analysts
+    # Parse analysts from command line if provided
     selected_analysts = None
-    choices = questionary.checkbox(
-        "Use the Space bar to select/unselect analysts.",
-        choices=[questionary.Choice(display, value=value) for display, value in ANALYST_ORDER],
-        instruction="\n\nPress 'a' to toggle all.\n\nPress Enter when done to run the hedge fund.",
-        validate=lambda x: len(x) > 0 or "You must select at least one analyst.",
-        style=questionary.Style(
-            [
-                ("checkbox-selected", "fg:green"),
-                ("selected", "fg:green noinherit"),
-                ("highlighted", "noinherit"),
-                ("pointer", "noinherit"),
-            ]
-        ),
-    ).ask()
+    if args.analysts:
+        selected_analysts = [analyst.strip()
+                             for analyst in args.analysts.split(",")]
+        available_analysts = [value for _, value in ANALYST_ORDER]
+        invalid_analysts = [
+            a for a in selected_analysts if a not in available_analysts]
 
-    if not choices:
-        print("\n\nInterrupt received. Exiting...")
-        sys.exit(0)
-    else:
-        selected_analysts = choices
+        if invalid_analysts:
+            print(f"Error: Invalid analyst(s): {', '.join(invalid_analysts)}")
+            print(f"Available analysts: {', '.join(available_analysts)}")
+            sys.exit(1)
+
         print(
-            f"\nSelected analysts: "
-            f"{', '.join(Fore.GREEN + choice.title().replace('_', ' ') + Style.RESET_ALL for choice in choices)}"
-        )
-
-    # Select LLM model
-    model_choice = questionary.select(
-        "Select your LLM model:",
-        choices=[questionary.Choice(display, value=value) for display, value, _ in LLM_ORDER],
-        style=questionary.Style([
-            ("selected", "fg:green bold"),
-            ("pointer", "fg:green bold"),
-            ("highlighted", "fg:green"),
-            ("answer", "fg:green bold"),
-        ])
-    ).ask()
-
-    if not model_choice:
-        print("\n\nInterrupt received. Exiting...")
-        sys.exit(0)
+            f"\nSelected analysts: {', '.join(Fore.GREEN + analyst.title().replace('_', ' ') + Style.RESET_ALL for analyst in selected_analysts)}\n")
     else:
+        # Choose analysts interactively if not specified in command line
+        choices = questionary.checkbox(
+            "Use the Space bar to select/unselect analysts.",
+            choices=[questionary.Choice(display, value=value)
+                     for display, value in ANALYST_ORDER],
+            instruction="\n\nPress 'a' to toggle all.\n\nPress Enter when done to run the hedge fund.",
+            validate=lambda x: len(
+                x) > 0 or "You must select at least one analyst.",
+            style=questionary.Style(
+                [
+                    ("checkbox-selected", "fg:green"),
+                    ("selected", "fg:green noinherit"),
+                    ("highlighted", "noinherit"),
+                    ("pointer", "noinherit"),
+                ]
+            ),
+        ).ask()
+
+        if not choices:
+            print("\n\nInterrupt received. Exiting...")
+            sys.exit(0)
+        else:
+            selected_analysts = choices
+            print(
+                f"\nSelected analysts: "
+                f"{', '.join(Fore.GREEN + choice.title().replace('_', ' ') + Style.RESET_ALL for choice in choices)}"
+            )
+
+    # Select or use provided LLM model
+    model_choice = None
+    model_provider = None
+
+    if args.model:
+        model_choice = args.model
+        # Get model info using the helper function
         model_info = get_model_info(model_choice)
         if model_info:
             model_provider = model_info.provider.value
-            print(f"\nSelected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
+            print(
+                f"\nSelected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
         else:
+            print(f"Warning: Unknown model {model_choice}, proceeding anyway")
             model_provider = "Unknown"
-            print(f"\nSelected model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
+            print(
+                f"\nSelected model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
+    else:
+        # Interactive selection
+        model_choice = questionary.select(
+            "Select your LLM model:",
+            choices=[questionary.Choice(display, value=value)
+                     for display, value, _ in LLM_ORDER],
+            style=questionary.Style([
+                ("selected", "fg:green bold"),
+                ("pointer", "fg:green bold"),
+                ("highlighted", "fg:green"),
+                ("answer", "fg:green bold"),
+            ])
+        ).ask()
+
+        if not model_choice:
+            print("\n\nInterrupt received. Exiting...")
+            sys.exit(0)
+        else:
+            model_info = get_model_info(model_choice)
+            if model_info:
+                model_provider = model_info.provider.value
+                print(
+                    f"\nSelected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
+            else:
+                model_provider = "Unknown"
+                print(
+                    f"\nSelected model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
 
     # Create and run the backtester
     backtester = Backtester(
@@ -712,7 +808,7 @@ if __name__ == "__main__":
         tickers=tickers,
         start_date=args.start_date,
         end_date=args.end_date,
-        initial_capital=args.initial_capital,
+        initial_capital=args.initial_cash,
         model_name=model_choice,
         model_provider=model_provider,
         selected_analysts=selected_analysts,
@@ -721,3 +817,6 @@ if __name__ == "__main__":
 
     performance_metrics = backtester.run_backtest()
     performance_df = backtester.analyze_performance()
+    print(f"Selected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}")
+    print(
+        f"Selected analysts: {', '.join(Fore.GREEN + analyst.title().replace('_', ' ') + Style.RESET_ALL for analyst in selected_analysts)}")

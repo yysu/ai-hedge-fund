@@ -17,7 +17,7 @@ This system employs several agents working together:
 11. Risk Manager - Calculates risk metrics and sets position limits
 12. Portfolio Manager - Makes final trading decisions and generates orders
 
-<img width="1020" alt="Screenshot 2025-03-08 at 4 45 22 PM" src="https://github.com/user-attachments/assets/d8ab891e-a083-4fed-b514-ccc9322a3e57" />
+<img width="1020" alt="Screenshot 2025-03-08 at 4 45 22 PM" src="https://github.com/user-attachments/assets/d8ab891e-a083-4fed-b514-ccc9322a3e57" />
 
 **Note**: the system simulates trading decisions, it does not actually trade.
 
@@ -36,14 +36,20 @@ This project is for **educational and research purposes only**.
 By using this software, you agree to use it solely for learning purposes.
 
 ## Table of Contents
-- [Setup](#setup)
-- [Usage](#usage)
-  - [Running the Hedge Fund](#running-the-hedge-fund)
-  - [Running the Backtester](#running-the-backtester)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [Feature Requests](#feature-requests)
-- [License](#license)
+- [AI Hedge Fund](#ai-hedge-fund)
+  - [Disclaimer](#disclaimer)
+  - [Table of Contents](#table-of-contents)
+  - [Setup](#setup)
+  - [Usage](#usage)
+    - [Command Line Arguments](#command-line-arguments)
+      - [Available Analysts:](#available-analysts)
+      - [Available LLM Models:](#available-llm-models)
+    - [Running the Hedge Fund](#running-the-hedge-fund)
+    - [Running the Backtester](#running-the-backtester)
+  - [Project Structure](#project-structure)
+  - [Contributing](#contributing)
+  - [Feature Requests](#feature-requests)
+  - [License](#license)
 
 ## Setup
 
@@ -92,23 +98,67 @@ For any other ticker, you will need to set the `FINANCIAL_DATASETS_API_KEY` in t
 
 ## Usage
 
+### Command Line Arguments
+
+The following command line arguments are available for both the main program and backtester:
+
+| Argument | Description | Default | Example Values |
+|---------|-------------|---------|---------------|
+| `--ticker` | Comma-separated list of stock ticker symbols | Required | `AAPL,MSFT,NVDA` |
+| `--start-date` | Start date in YYYY-MM-DD format | 3 months before end date | `2024-01-01` |
+| `--end-date` | End date in YYYY-MM-DD format | Current date | `2024-03-01` |
+| `--analysts` | Comma-separated list of analysts to use | Interactive selection | `warren_buffett,charlie_munger,ben_graham` |
+| `--model` | LLM model to use | Interactive selection | `gpt-4o`, `claude-3-sonnet-20240229` |
+| `--show-reasoning` | Show reasoning from each agent | False | Flag (no value needed) |
+| `--show-agent-graph` | Generate and show agent workflow graph | False | Flag (no value needed) |
+| `--initial-cash` | Initial cash position (main.py) | 10000.0 | `50000` |
+| `--margin-requirement` | Margin ratio for short positions | 0.0 | `0.5` |
+| `--initial-capital` | Initial capital amount (backtester.py) | 10000 | `50000` |
+
+#### Available Analysts:
+- `ben_graham` - Benjamin Graham's value investing strategy
+- `bill_ackman` - Bill Ackman's activist investing approach
+- `cathie_wood` - Cathie Wood's innovation-focused growth investing
+- `charlie_munger` - Charlie Munger's quality-focused approach
+- `stanley_druckenmiller` - Stanley Druckenmiller's macro trading approach
+- `warren_buffett` - Warren Buffett's quality-at-fair-price strategy
+- `technical_analyst` - Technical analysis based on price and volume patterns
+- `fundamentals_analyst` - Fundamental analysis based on financial metrics
+- `sentiment_analyst` - Market sentiment analysis
+- `valuation_analyst` - Quantitative valuation methods
+
+#### Available LLM Models:
+Depending on your API keys, you can use models from:
+- OpenAI: `gpt-4o`, `gpt-4o-mini`, etc.
+- Anthropic: `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, etc.
+- Groq: `llama3-70b-8192`, `mixtral-8x7b-32768`, etc.
+- DeepSeek: `deepseek-coder`, etc.
+
 ### Running the Hedge Fund
 ```bash
 poetry run python src/main.py --ticker AAPL,MSFT,NVDA
 ```
 
 **Example Output:**
-<img width="992" alt="Screenshot 2025-01-06 at 5 50 17 PM" src="https://github.com/user-attachments/assets/e8ca04bf-9989-4a7d-a8b4-34e04666663b" />
+<img width="992" alt="Screenshot 2025-01-06 at 5 50 17 PM" src="https://github.com/user-attachments/assets/e8ca04bf-9989-4a7d-a8b4-34e04666663b" />
 
-You can also specify a `--show-reasoning` flag to print the reasoning of each agent to the console.
+Example commands:
 
 ```bash
+# Show detailed reasoning from each agent
 poetry run python src/main.py --ticker AAPL,MSFT,NVDA --show-reasoning
-```
-You can optionally specify the start and end dates to make decisions for a specific time period.
 
-```bash
-poetry run python src/main.py --ticker AAPL,MSFT,NVDA --start-date 2024-01-01 --end-date 2024-03-01 
+# Specify time period
+poetry run python src/main.py --ticker AAPL,MSFT,NVDA --start-date 2024-01-01 --end-date 2024-03-01
+
+# Specify which analysts to use (instead of interactive selection)
+poetry run python src/main.py --ticker AAPL,MSFT,NVDA --analysts warren_buffett,charlie_munger,ben_graham
+
+# Specify which LLM model to use (instead of interactive selection)
+poetry run python src/main.py --ticker AAPL,MSFT,NVDA --model gpt-4o
+
+# Combine multiple options
+poetry run python src/main.py --ticker AAPL,MSFT,NVDA --analysts warren_buffett,charlie_munger --model gpt-4o --start-date 2024-01-01 --end-date 2024-03-01
 ```
 
 ### Running the Backtester
@@ -118,15 +168,28 @@ poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA
 ```
 
 **Example Output:**
-<img width="941" alt="Screenshot 2025-01-06 at 5 47 52 PM" src="https://github.com/user-attachments/assets/00e794ea-8628-44e6-9a84-8f8a31ad3b47" />
+<img width="941" alt="Screenshot 2025-01-06 at 5 47 52 PM" src="https://github.com/user-attachments/assets/00e794ea-8628-44e6-9a84-8f8a31ad3b47" />
 
-You can optionally specify the start and end dates to backtest over a specific time period.
+Example backtester commands:
 
 ```bash
+# Specify time period
 poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA --start-date 2024-01-01 --end-date 2024-03-01
+
+# Specify which analysts to use (instead of interactive selection)
+poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA --analysts warren_buffett,charlie_munger
+
+# Specify which LLM model to use (instead of interactive selection)
+poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA --model gpt-4o
+
+# Adjust initial capital and margin requirements
+poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA --initial-capital 50000 --margin-requirement 0.5
+
+# Combine multiple options
+poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA --analysts warren_buffett,charlie_munger --model gpt-4o --start-date 2024-01-01 --end-date 2024-03-01 --initial-capital 100000
 ```
 
-## Project Structure 
+## Project Structure
 ```
 ai-hedge-fund/
 ├── src/

@@ -41,12 +41,13 @@ def parse_hedge_fund_response(response):
         print(f"JSON decoding error: {e}\nResponse: {repr(response)}")
         return None
     except TypeError as e:
-        print(f"Invalid response type (expected string, got {type(response).__name__}): {e}")
+        print(
+            f"Invalid response type (expected string, got {type(response).__name__}): {e}")
         return None
     except Exception as e:
-        print(f"Unexpected error while parsing response: {e}\nResponse: {repr(response)}")
+        print(
+            f"Unexpected error while parsing response: {e}\nResponse: {repr(response)}")
         return None
-
 
 
 ##### Run the Hedge Fund #####
@@ -141,12 +142,13 @@ def create_workflow(selected_analysts=None):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run the hedge fund trading system")
+    parser = argparse.ArgumentParser(
+        description="Run the hedge fund trading system")
     parser.add_argument(
         "--initial-cash",
         type=float,
-        default=100000.0,
-        help="Initial cash position. Defaults to 100000.0)"
+        default=10000.0,
+        help="Initial cash position. Defaults to 10000.0)"
     )
     parser.add_argument(
         "--margin-requirement",
@@ -154,71 +156,123 @@ if __name__ == "__main__":
         default=0.0,
         help="Initial margin requirement. Defaults to 0.0"
     )
-    parser.add_argument("--tickers", type=str, required=True, help="Comma-separated list of stock ticker symbols")
+    parser.add_argument("--ticker", type=str, required=True,
+                        help="Comma-separated list of stock ticker symbols")
     parser.add_argument(
         "--start-date",
         type=str,
         help="Start date (YYYY-MM-DD). Defaults to 3 months before end date",
     )
-    parser.add_argument("--end-date", type=str, help="End date (YYYY-MM-DD). Defaults to today")
-    parser.add_argument("--show-reasoning", action="store_true", help="Show reasoning from each agent")
+    parser.add_argument("--end-date", type=str,
+                        help="End date (YYYY-MM-DD). Defaults to today")
+    parser.add_argument("--show-reasoning", action="store_true",
+                        help="Show reasoning from each agent")
     parser.add_argument(
         "--show-agent-graph", action="store_true", help="Show the agent graph"
+    )
+    parser.add_argument(
+        "--analysts", type=str,
+        help="Comma-separated list of analysts to use. Available options: ben_graham, bill_ackman, cathie_wood, charlie_munger, stanley_druckenmiller, warren_buffett, technical_analyst, fundamentals_analyst, sentiment_analyst, valuation_analyst"
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        help="LLM model to use (e.g., gpt-4o, claude-3-sonnet-20240229)"
     )
 
     args = parser.parse_args()
 
     # Parse tickers from comma-separated string
-    tickers = [ticker.strip() for ticker in args.tickers.split(",")]
+    tickers = [ticker.strip() for ticker in args.ticker.split(",")]
 
-    # Select analysts
+    # Parse analysts from command line if provided
     selected_analysts = None
-    choices = questionary.checkbox(
-        "Select your AI analysts.",
-        choices=[questionary.Choice(display, value=value) for display, value in ANALYST_ORDER],
-        instruction="\n\nInstructions: \n1. Press Space to select/unselect analysts.\n2. Press 'a' to select/unselect all.\n3. Press Enter when done to run the hedge fund.\n",
-        validate=lambda x: len(x) > 0 or "You must select at least one analyst.",
-        style=questionary.Style(
-            [
-                ("checkbox-selected", "fg:green"),
-                ("selected", "fg:green noinherit"),
-                ("highlighted", "noinherit"),
-                ("pointer", "noinherit"),
-            ]
-        ),
-    ).ask()
+    if args.analysts:
+        selected_analysts = [analyst.strip()
+                             for analyst in args.analysts.split(",")]
+        available_analysts = [value for _, value in ANALYST_ORDER]
+        invalid_analysts = [
+            a for a in selected_analysts if a not in available_analysts]
 
-    if not choices:
-        print("\n\nInterrupt received. Exiting...")
-        sys.exit(0)
+        if invalid_analysts:
+            print(f"Error: Invalid analyst(s): {', '.join(invalid_analysts)}")
+            print(f"Available analysts: {', '.join(available_analysts)}")
+            sys.exit(1)
+
+        print(
+            f"\nSelected analysts: {', '.join(Fore.GREEN + analyst.title().replace('_', ' ') + Style.RESET_ALL for analyst in selected_analysts)}\n")
     else:
-        selected_analysts = choices
-        print(f"\nSelected analysts: {', '.join(Fore.GREEN + choice.title().replace('_', ' ') + Style.RESET_ALL for choice in choices)}\n")
+        # Select analysts interactively if not specified in command line
+        choices = questionary.checkbox(
+            "Select your AI analysts.",
+            choices=[questionary.Choice(display, value=value)
+                     for display, value in ANALYST_ORDER],
+            instruction="\n\nInstructions: \n1. Press Space to select/unselect analysts.\n2. Press 'a' to select/unselect all.\n3. Press Enter when done to run the hedge fund.\n",
+            validate=lambda x: len(
+                x) > 0 or "You must select at least one analyst.",
+            style=questionary.Style(
+                [
+                    ("checkbox-selected", "fg:green"),
+                    ("selected", "fg:green noinherit"),
+                    ("highlighted", "noinherit"),
+                    ("pointer", "noinherit"),
+                ]
+            ),
+        ).ask()
 
-    # Select LLM model
-    model_choice = questionary.select(
-        "Select your LLM model:",
-        choices=[questionary.Choice(display, value=value) for display, value, _ in LLM_ORDER],
-        style=questionary.Style([
-            ("selected", "fg:green bold"),
-            ("pointer", "fg:green bold"),
-            ("highlighted", "fg:green"),
-            ("answer", "fg:green bold"),
-        ])
-    ).ask()
+        if not choices:
+            print("\n\nInterrupt received. Exiting...")
+            sys.exit(0)
+        else:
+            selected_analysts = choices
+            print(
+                f"\nSelected analysts: {', '.join(Fore.GREEN + choice.title().replace('_', ' ') + Style.RESET_ALL for choice in choices)}\n")
 
-    if not model_choice:
-        print("\n\nInterrupt received. Exiting...")
-        sys.exit(0)
-    else:
+    # Select or use provided LLM model
+    model_choice = None
+    model_provider = None
+
+    if args.model:
+        model_choice = args.model
         # Get model info using the helper function
         model_info = get_model_info(model_choice)
         if model_info:
             model_provider = model_info.provider.value
-            print(f"\nSelected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
+            print(
+                f"\nSelected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
         else:
+            print(f"Warning: Unknown model {model_choice}, proceeding anyway")
             model_provider = "Unknown"
-            print(f"\nSelected model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
+            print(
+                f"\nSelected model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
+    else:
+        # Interactive selection
+        model_choice = questionary.select(
+            "Select your LLM model:",
+            choices=[questionary.Choice(display, value=value)
+                     for display, value, _ in LLM_ORDER],
+            style=questionary.Style([
+                ("selected", "fg:green bold"),
+                ("pointer", "fg:green bold"),
+                ("highlighted", "fg:green"),
+                ("answer", "fg:green bold"),
+            ])
+        ).ask()
+
+        if not model_choice:
+            print("\n\nInterrupt received. Exiting...")
+            sys.exit(0)
+        else:
+            # Get model info using the helper function
+            model_info = get_model_info(model_choice)
+            if model_info:
+                model_provider = model_info.provider.value
+                print(
+                    f"\nSelected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
+            else:
+                model_provider = "Unknown"
+                print(
+                    f"\nSelected model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
 
     # Create the workflow with selected analysts
     workflow = create_workflow(selected_analysts)
@@ -250,7 +304,8 @@ if __name__ == "__main__":
     if not args.start_date:
         # Calculate 3 months before end_date
         end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
-        start_date = (end_date_obj - relativedelta(months=3)).strftime("%Y-%m-%d")
+        start_date = (end_date_obj - relativedelta(months=3)
+                      ).strftime("%Y-%m-%d")
     else:
         start_date = args.start_date
 
@@ -286,3 +341,6 @@ if __name__ == "__main__":
         model_provider=model_provider,
     )
     print_trading_output(result)
+    print(f"Selected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}")
+    print(
+        f"Selected analysts: {', '.join(Fore.GREEN + analyst.title().replace('_', ' ') + Style.RESET_ALL for analyst in selected_analysts)}")
