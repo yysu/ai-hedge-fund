@@ -70,21 +70,21 @@ AVAILABLE_MODELS = [
         model_name="deepseek-chat",
         provider=ModelProvider.DEEPSEEK
     ),
-    # LLMModel(
-    #     display_name="[gemini] gemini-2.0-flash",
-    #     model_name="gemini-2.0-flash",
-    #     provider=ModelProvider.GEMINI
-    # ),
-    # LLMModel(
-    #     display_name="[gemini] gemini-2.0-pro",
-    #     model_name="gemini-2.0-pro-exp-02-05",
-    #     provider=ModelProvider.GEMINI
-    # ),
-    # LLMModel(
-    #     display_name="[groq] llama-3.3 70b",
-    #     model_name="llama-3.3-70b-versatile",
-    #     provider=ModelProvider.GROQ
-    # ),
+    LLMModel(
+        display_name="[gemini] gemini-2.0-flash",
+        model_name="gemini-2.0-flash",
+        provider=ModelProvider.GEMINI
+    ),
+    LLMModel(
+        display_name="[gemini] gemini-2.5-pro",
+        model_name="gemini-2.5-pro-exp-03-25",
+        provider=ModelProvider.GEMINI
+    ),
+    LLMModel(
+        display_name="[groq] llama-3.3 70b",
+        model_name="llama-3.3-70b-versatile",
+        provider=ModelProvider.GROQ
+    ),
     LLMModel(
         display_name="[openai] gpt-4.5",
         model_name="gpt-4.5-preview",
